@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart & Checkout</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    html[data-theme="light"], html:not([data-theme]) {
+      --bg: #f5fffe; --card: #ffffff; --accent: #0891b2; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.22); --nav-bg: rgba(255,255,255,0.95); --btn-text: #fff;
+    }
+    html[data-theme="dark"] {
+      --bg: #070b12; --card: #0f1621; --accent: #22d3ee; --text: #f8fafc; --muted: #cbd5e1;
+      --border: rgba(34,211,238,0.22); --nav-bg: rgba(7,11,18,0.95); --btn-text: #083344;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Outfit','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--nav-bg); backdrop-filter:blur(10px); z-index:10; }
+    nav a { color:var(--text); text-decoration:none; font-weight:700; }
+    .back { color:var(--muted); font-weight:500; font-size:0.9rem; }
+    .wrap { max-width:720px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    h1 { color:var(--text); font-size:1.75rem; margin-bottom:1.25rem; }
+    h2 { font-size:1.15rem; margin:1.5rem 0 0.75rem; }
+    .item { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:0.75rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+    .item img { width:64px; height:64px; object-fit:cover; border-radius:10px; background:rgba(0,0,0,0.3); }
+    .item .info { flex:1; min-width:140px; }
+    .item .name { font-weight:700; }
+    .item .price { color:var(--accent); font-weight:700; margin-top:0.25rem; }
+    .qty { display:flex; align-items:center; gap:0.4rem; }
+    .qty button { background:rgba(255,255,255,0.08); border:1px solid var(--border); color:var(--text); width:28px; height:28px; border-radius:6px; cursor:pointer; }
+    .remove { background:transparent; border:1px solid rgba(248,113,113,0.4); color:#f87171; border-radius:8px; padding:0.35rem 0.6rem; cursor:pointer; font-size:0.8rem; }
+    .total { font-size:1.25rem; font-weight:800; margin:1.25rem 0; }
+    .pay-box { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-top:1rem; }
+    .pay-box label { display:block; font-size:0.85rem; color:var(--muted); margin-bottom:0.35rem; }
+    .pay-box input[type=text], .pay-box input[type=file] { width:100%; padding:0.6rem 0.8rem; border-radius:10px; border:1px solid var(--border); background:rgba(0,0,0,0.25); color:var(--text); margin-bottom:0.85rem; }
+    .qr { max-width:200px; border-radius:12px; border:1px solid var(--border); margin:0.5rem 0 1rem; display:block; }
+    .upi-id { font-weight:700; color:var(--accent); font-size:1.05rem; margin-bottom:0.5rem; word-break:break-all; }
+    .btn { background:linear-gradient(135deg,#06b6d4,#0891b2); color:#083344; font-weight:700; border:none; border-radius:10px; padding:0.75rem 1.4rem; cursor:pointer; font-size:1rem; width:100%; max-width:280px; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+    .msg { margin-top:1rem; padding:0.85rem; border-radius:10px; display:none; }
+    .msg.ok { display:block; background:rgba(6,182,212,0.15); color:#22d3ee; }
+    .msg.err { display:block; background:rgba(248,113,113,0.12); color:#f87171; }
+    .empty { color:var(--muted); text-align:center; padding:2.5rem 1rem; }
+    .login-hint { color:var(--muted); font-size:0.9rem; margin-bottom:1rem; }
+    .login-hint a { color:var(--accent); }
+    .spin { width:18px; height:18px; border:2px solid rgba(6,182,212,0.3); border-top-color:#06b6d4; border-radius:50%; display:inline-block; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:0.4rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  
+    /* Floating theme swipe */
+    .theme-fab {
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 72px;
+      height: 36px;
+      padding: 3px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card, var(--card, #fff));
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .theme-fab-knob {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--gradient, linear-gradient(135deg, #22d3ee, #0891b2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+      color: #fff;
+    }
+    [data-theme="dark"] .theme-fab-knob {
+      transform: translateX(36px);
+    }
+    .theme-fab-track {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      pointer-events: none;
+      font-size: 0.7rem;
+      opacity: 0.55;
+    }
+
+  </style>
+
+
+<script>
+(function(){
+  var t = localStorage.getItem('mc_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    var b = document.getElementById('themeToggle');
+    if (!b || b._bound) return;
+    b._bound = true;
+    b.addEventListener('click', function(){
+      var n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', n);
+      localStorage.setItem('mc_theme', n);
+      sync();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <div>
+      <a href="/my-orders.html" style="color:var(--muted);font-size:0.9rem;margin-right:1rem;font-weight:600;">My Products</a>
+      <a href="/" class="back">← Continue shopping</a>
+    </div>
+  </nav>
+  <div class="wrap">
+    <h1>🛒 Cart</h1>
+    <p class="login-hint" id="loginHint" style="display:none;">Only registered members can buy. Please <a href="/login.html?next=/cart.html">login</a> or <a href="/register.html?next=/cart.html">register</a> to checkout.</p>
+    <div id="list"></div>
+    <div class="empty" id="empty" style="display:none;">Your cart is empty.</div>
+    <div class="total" id="total" style="display:none;"></div>
+    <div id="couponBox" style="display:none;margin:1rem 0;padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:14px;">
+      <label style="font-weight:600;font-size:0.9rem;">Coupon / Referral code</label>
+      <div style="display:flex;gap:0.5rem;margin-top:0.5rem;flex-wrap:wrap;">
+        <input type="text" id="couponCode" placeholder="e.g. WELCOME10 or friend code" style="flex:1;min-width:160px;padding:0.6rem 0.85rem;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);text-transform:uppercase;" />
+        <button type="button" class="btn" id="btnApplyCoupon" style="padding:0.6rem 1rem;">Apply</button>
+        <button type="button" class="btn btn-outline" id="btnClearCoupon" style="padding:0.6rem 1rem;display:none;">Clear</button>
+      </div>
+      <div id="couponMsg" style="margin-top:0.5rem;font-size:0.9rem;color:var(--muted);"></div>
+    </div>
+
+    <div id="checkoutBox" style="display:none;">
+      <h2>💳 Manual UPI Payment</h2>
+      <div class="pay-box">
+        <div id="upiInfo">
+          <div style="color:var(--muted);font-size:0.9rem;margin-bottom:0.35rem;">Pay to UPI ID</div>
+          <div class="upi-id" id="storeUpi">—</div>
+          <img id="storeQr" class="qr" style="display:none;" alt="UPI QR" />
+        </div>
+        <label>Your UPI ID (from which you paid)</label>
+        <input type="text" id="payerUpi" placeholder="yourname@upi" />
+        <label>Payment proof screenshot</label>
+        <input type="file" id="proof" accept="image/png,image/jpeg,image/gif,image/webp" />
+        <button type="button" class="btn" id="btnCheckout">Checkout</button>
+        <div id="chkLoading" style="display:none;margin-top:0.75rem;color:var(--muted);font-size:0.9rem;"><span class="spin"></span> Submitting...</div>
+      </div>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+  <script>
+    function getCart(){try{return JSON.parse(localStorage.getItem('mc_cart')||'[]');}catch{return[];}}
+    function setCart(c){localStorage.setItem('mc_cart',JSON.stringify(c));render();}
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    let loggedIn=false;
+    let appliedCoupon=null; // {code,discount,subtotal,total,message}
+    async function checkAuth(){
+      try{
+        const r=await fetch('/api/me',{credentials:'include'});
+        const d=await r.json();
+        loggedIn=!!(d.success&&d.user);
+        document.getElementById('loginHint').style.display=loggedIn?'none':'block';
+        const box=document.getElementById('checkoutBox');
+        const cbox=document.getElementById('couponBox');
+        if(!loggedIn){
+          if(box) box.style.display='none';
+          if(cbox) cbox.style.display='none';
+        }
+      }catch{loggedIn=false;document.getElementById('loginHint').style.display='block';}
+    }
+    async function loadUpi(){
+      try{
+        const r=await fetch('/api/settings');
+        const d=await r.json();
+        if(d.success&&d.settings){
+          document.getElementById('storeUpi').textContent=d.settings.upiId||'Not set by admin';
+          if(d.settings.upiQr){
+            const img=document.getElementById('storeQr');
+            img.src=d.settings.upiQr;
+            img.style.display='block';
+          }
+        }
+      }catch{}
+    }
+    function render(){
+      const cart=getCart();
+      const list=document.getElementById('list');
+      const empty=document.getElementById('empty');
+      const totalEl=document.getElementById('total');
+      const box=document.getElementById('checkoutBox');
+      if(!cart.length){
+        list.innerHTML='';
+        empty.style.display='block';
+        totalEl.style.display='none';
+        box.style.display='none';
+        return;
+      }
+      empty.style.display='none';
+      totalEl.style.display='block';
+      box.style.display=loggedIn?'block':'none';
+      let sum=0;
+      list.innerHTML=cart.map((it,idx)=>{
+        const line=(Number(it.price)||0)*(it.qty||1);
+        sum+=line;
+        const img=it.image?'<img src="'+escapeHtml(it.image)+'" alt=""/>':'<div style="width:64px;height:64px;border-radius:10px;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">🎁</div>';
+        return '<div class="item">'+img+'<div class="info"><div class="name">'+escapeHtml(it.name)+'</div><div class="price">₹'+line.toFixed(2)+'</div></div>'+
+          '<div class="qty"><button type="button" data-dec="'+idx+'">−</button><span>'+(it.qty||1)+'</span><button type="button" data-inc="'+idx+'">+</button></div>'+
+          '<button type="button" class="remove" data-rm="'+idx+'">Remove</button></div>';
+      }).join('');
+      if(appliedCoupon&&appliedCoupon.discount>0){
+        totalEl.innerHTML='Subtotal: ₹'+sum.toFixed(2)+'<br><span style="color:var(--accent);font-size:1rem;">Discount ('+escapeHtml(appliedCoupon.code)+'): −₹'+appliedCoupon.discount.toFixed(2)+'</span><br>Total: ₹'+Math.max(0,sum-appliedCoupon.discount).toFixed(2);
+      }else{
+        totalEl.textContent='Total: ₹'+sum.toFixed(2);
+      }
+      const cbox=document.getElementById('couponBox');
+      if(cbox) cbox.style.display=(cart.length&&loggedIn)?'block':'none';
+      list.querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>{const c=getCart();c[b.dataset.inc].qty=(c[b.dataset.inc].qty||1)+1;setCart(c);});
+      list.querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>{const c=getCart();const i=+b.dataset.dec;c[i].qty=(c[i].qty||1)-1;if(c[i].qty<1)c.splice(i,1);setCart(c);});
+      list.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{const c=getCart();c.splice(+b.dataset.rm,1);setCart(c);});
+    }
+    
+    document.getElementById('btnApplyCoupon')?.addEventListener('click', async () => {
+      const code = (document.getElementById('couponCode')?.value || '').trim();
+      const msg = document.getElementById('couponMsg');
+      const cart = getCart();
+      if (!code) { if(msg) msg.textContent = 'Enter a code'; return; }
+      if (!cart.length) return;
+      try {
+        const res = await fetch('/api/validate-coupon', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, items: cart.map(i => ({ productId: i.productId, qty: i.qty || 1 })) })
+        });
+        const data = await res.json();
+        if (data.success) {
+          appliedCoupon = { code: data.code, discount: data.discount, message: data.message };
+          if (msg) { msg.style.color = 'var(--accent)'; msg.textContent = data.message + ' (−₹' + data.discount.toFixed(2) + ')'; }
+          document.getElementById('btnClearCoupon').style.display = 'inline-block';
+          render();
+        } else {
+          appliedCoupon = null;
+          if (msg) { msg.style.color = '#f87171'; msg.textContent = data.message || 'Invalid code'; }
+          render();
+        }
+      } catch {
+        if (msg) { msg.style.color = '#f87171'; msg.textContent = 'Failed to validate'; }
+      }
+    });
+    document.getElementById('btnClearCoupon')?.addEventListener('click', () => {
+      appliedCoupon = null;
+      document.getElementById('couponCode').value = '';
+      document.getElementById('couponMsg').textContent = '';
+      document.getElementById('btnClearCoupon').style.display = 'none';
+      render();
+    });
+
+    document.getElementById('btnCheckout').onclick=async()=>{
+      const msg=document.getElementById('msg');
+      msg.className='msg';
+      if(!loggedIn){msg.className='msg err';msg.textContent='Please login first.';return;}
+      const cart=getCart();
+      if(!cart.length)return;
+      const payerUpi=(document.getElementById('payerUpi').value||'').trim();
+      const proof=document.getElementById('proof');
+      if(!payerUpi){msg.className='msg err';msg.textContent='Enter your UPI ID used for payment.';return;}
+      if(!proof.files||!proof.files[0]){msg.className='msg err';msg.textContent='Upload payment proof screenshot.';return;}
+      const btn=document.getElementById('btnCheckout');
+      const loading=document.getElementById('chkLoading');
+      btn.disabled=true;
+      loading.style.display='block';
+      try{
+        const fd=new FormData();
+        fd.append('items',JSON.stringify(cart.map(i=>({productId:i.productId,qty:i.qty||1}))));
+        fd.append('payerUpi',payerUpi);
+        fd.append('proof',proof.files[0]);
+        if(appliedCoupon&&appliedCoupon.code) fd.append('couponCode', appliedCoupon.code);
+        const res=await fetch('/api/checkout',{method:'POST',credentials:'include',body:fd});
+        const data=await res.json();
+        if(data.success){
+          msg.className='msg ok';
+          msg.textContent='Submitted! Status: Pending. Admin will approve soon. Check My Products.';
+          localStorage.removeItem('mc_cart');
+          document.getElementById('payerUpi').value='';
+          proof.value='';
+          render();
+        }else{
+          msg.className='msg err';
+          msg.textContent=data.message||'Checkout failed';
+        }
+      }catch{
+        msg.className='msg err';
+        msg.textContent='Network error';
+      }
+      btn.disabled=false;
+      loading.style.display='none';
+    };
+    checkAuth().then(()=>{loadUpi();render();});
+  </script>
+</body>
+</html>

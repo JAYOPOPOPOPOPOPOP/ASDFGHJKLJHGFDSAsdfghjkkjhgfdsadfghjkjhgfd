@@ -1,0 +1,39 @@
+{
+  "users": [],
+  "settings": {
+    "siteName": "Minecraft Server",
+    "serverIP": "play.example.com",
+    "serverPort": "25565",
+    "discordLink": "",
+    "logo": "",
+    "favicon": "",
+    "bgType": "default",
+    "bgDefault": 0,
+    "bgImageUrl": "",
+    "bgLiveUrl": "",
+    "particlesEnabled": true,
+    "particleType": 0,
+    "maintenanceMode": false,
+    "upiId": "",
+    "upiQr": "",
+    "referralEnabled": true,
+    "referralDiscountPercent": 5,
+    "referralMinOrder": 0,
+    "colors": {
+      "bg": "#f5fffe",
+      "card": "#ffffff",
+      "accent": "#06b6d4",
+      "accentBright": "#22d3ee",
+      "text": "#0f172a",
+      "muted": "#64748b"
+    }
+  },
+  "sales": [],
+  "sessions": {},
+  "connectors": [],
+  "pages": [],
+  "categories": [],
+  "products": [],
+  "payments": [],
+  "coupons": []
+}

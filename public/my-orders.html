@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Products</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    html[data-theme="light"], html:not([data-theme]) {
+      --bg: #f5fffe; --card: #ffffff; --accent: #0891b2; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.22); --nav-bg: rgba(255,255,255,0.95); --btn-text: #fff;
+    }
+    html[data-theme="dark"] {
+      --bg: #070b12; --card: #0f1621; --accent: #22d3ee; --text: #f8fafc; --muted: #cbd5e1;
+      --border: rgba(34,211,238,0.22); --nav-bg: rgba(7,11,18,0.95); --btn-text: #083344;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Outfit','Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+    nav { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.5rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--nav-bg); backdrop-filter:blur(10px); z-index:10; }
+    nav a { color:var(--text); text-decoration:none; font-weight:700; }
+    .back { color:var(--muted); font-weight:500; font-size:0.9rem; }
+    .wrap { max-width:800px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+    h1 { color:var(--text); font-size:1.75rem; margin-bottom:1.25rem; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.1rem; margin-bottom:0.85rem; }
+    .st { display:inline-block; font-size:0.75rem; font-weight:700; text-transform:uppercase; padding:0.2rem 0.5rem; border-radius:6px; }
+    .st.pending { background:rgba(251,191,36,0.2); color:#fbbf24; }
+    .st.approved { background:rgba(6,182,212,0.2); color:#22d3ee; }
+    .st.rejected { background:rgba(248,113,113,0.2); color:#f87171; }
+    .muted { color:var(--muted); font-size:0.9rem; }
+    .empty { text-align:center; color:var(--muted); padding:3rem 1rem; }
+  
+    /* Floating theme swipe */
+    .theme-fab {
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 72px;
+      height: 36px;
+      padding: 3px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card, var(--card, #fff));
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .theme-fab-knob {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--gradient, linear-gradient(135deg, #22d3ee, #0891b2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+      color: #fff;
+    }
+    [data-theme="dark"] .theme-fab-knob {
+      transform: translateX(36px);
+    }
+    .theme-fab-track {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      pointer-events: none;
+      font-size: 0.7rem;
+      opacity: 0.55;
+    }
+
+  </style>
+
+
+<script>
+(function(){
+  var t = localStorage.getItem('mc_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    var b = document.getElementById('themeToggle');
+    if (!b || b._bound) return;
+    b._bound = true;
+    b.addEventListener('click', function(){
+      var n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', n);
+      localStorage.setItem('mc_theme', n);
+      sync();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+</head>
+<body>
+  <nav>
+    <a href="/">⛏️ Store</a>
+    <a href="/cart.html" class="back">Cart →</a>
+  </nav>
+  <div class="wrap">
+    <h1>📦 My Products</h1>
+    <p class="muted" id="status">Loading...</p>
+    <div id="list"></div>
+    <div class="empty" id="empty" style="display:none;">No orders yet. <a href="/" style="color:var(--accent);">Shop now</a></div>
+  </div>
+  <script>
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+    async function load(){
+      try{
+        const me=await fetch('/api/me',{credentials:'include'});
+        const md=await me.json();
+        if(!md.success||!md.user){location.href='/login.html';return;}
+        const res=await fetch('/api/my-payments',{credentials:'include'});
+        const data=await res.json();
+        document.getElementById('status').style.display='none';
+        if(!data.success||!data.payments.length){
+          document.getElementById('empty').style.display='block';
+          return;
+        }
+        document.getElementById('list').innerHTML=data.payments.map(p=>{
+          const items=(p.items||[]).map(i=>escapeHtml(i.name)+' ×'+(i.qty||1)).join(', ');
+          return '<div class="card"><div style="display:flex;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;align-items:center;">'+
+            '<div><div style="font-weight:700;">'+items+'</div>'+
+            '<div class="muted" style="margin-top:0.35rem;">₹'+Number(p.total).toFixed(2)+' · '+escapeHtml(p.createdAt||'')+'</div></div>'+
+            '<span class="st '+escapeHtml(p.status)+'">'+escapeHtml(p.status)+'</span></div></div>';
+        }).join('');
+      }catch{
+        document.getElementById('status').textContent='Failed to load';
+      }
+    }
+    load();
+  </script>
+</body>
+</html>

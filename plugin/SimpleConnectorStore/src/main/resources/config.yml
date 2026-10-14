@@ -1,0 +1,6 @@
+# Simple Connector Store
+# Only paste the connect code from Admin → Connect Server
+# api-url is filled automatically when you download the plugin from the website
+api-url: "AUTO"
+connect-code: "SC-XXXX-XXXX-XXXX"
+heartbeat-seconds: 15

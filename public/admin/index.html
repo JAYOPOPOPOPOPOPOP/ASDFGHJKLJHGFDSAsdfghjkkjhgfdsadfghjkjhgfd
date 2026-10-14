@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5fffe;
+      --card: #ffffff;
+      --sidebar: #e6fafb;
+      --accent: #06b6d4;
+      --accent-bright: #0891b2;
+      --text: #0f172a;
+      --muted: #334155;
+      --border: rgba(6, 182, 212, 0.28);
+      --blue: #3b82f6;
+      --purple: #a78bfa;
+      --orange: #f59e0b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      -webkit-font-smoothing: antialiased;
+    }
+    .sidebar {
+      width: 240px;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar .brand {
+      padding: 0 1.4rem 1.5rem;
+      font-weight: 800;
+      font-size: 1.15rem;
+      color: var(--accent-bright);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .sidebar nav a {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.75rem 1.4rem;
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar nav a:hover, .sidebar nav a.active {
+      color: var(--text);
+      background: rgba(6,182,212,0.08);
+      border-left-color: var(--accent);
+    }
+    .sidebar .bottom {
+      margin-top: auto;
+      padding: 1rem 1.4rem;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar .bottom a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    .sidebar .bottom a:hover { color: var(--accent-bright); }
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      padding: 1.8rem 2rem;
+      min-height: 100vh;
+    }
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.3rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .stat-card .label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 800; margin-top: 0.3rem; }
+    .stat-card .sub { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+    .stat-card.green .value { color: var(--accent-bright); }
+    .stat-card.blue .value { color: #60a5fa; }
+    .stat-card.purple .value { color: var(--purple); }
+    .stat-card.orange .value { color: var(--orange); }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .panel h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 700px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .sidebar { width: 70px; }
+      .sidebar .brand span, .sidebar nav a span, .sidebar .bottom span { display: none; }
+      .main { margin-left: 70px; padding: 1.2rem; }
+    }
+    .form-group { margin-bottom: 0.9rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--muted); margin-bottom: 0.35rem; }
+    input[type="text"], input[type="url"], input[type="file"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(6,182,212,0.12); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.75rem 1.4rem;
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+      border: none;
+      border-radius: 10px;
+      color: #04100a;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(6,182,212,0.35); }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent-bright); box-shadow: none; }
+    .msg {
+      padding: 0.7rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .msg.ok { display: block; background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.3); color: #0e7490; }
+    .msg.err { display: block; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #b91c1c; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; }
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge.admin { background: rgba(6,182,212,0.15); color: var(--accent-bright); }
+    .badge.user { background: rgba(148,163,184,0.15); color: var(--muted); }
+    .section { display: none; }
+    .section.active { display: block; }
+    .top-list { list-style: none; }
+    .top-list li {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .top-list li:last-child { border-bottom: none; }
+    .logo-preview {
+      width: 48px; height: 48px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-top: 0.5rem;
+    }
+    #loading {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+      font-size: 1.1rem; color: var(--muted);
+    }
+  
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .cmd-row { display:flex; gap:0.5rem; align-items:center; }
+    .cmd-row input { flex:1; padding:0.55rem 0.75rem; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font-family:ui-monospace,monospace; font-size:0.85rem; }
+    .cmd-row button { background:rgba(248,113,113,0.15); border:1px solid rgba(248,113,113,0.35); color:#f87171; border-radius:8px; padding:0.4rem 0.65rem; cursor:pointer; font-size:0.8rem; }
+    
+    html[data-theme="light"], html:not([data-theme]) {
+      --bg: #f5fffe; --card: #ffffff; --sidebar: #e6fafb; --accent: #0891b2;
+      --accent-bright: #0e7490; --text: #0f172a; --muted: #334155;
+      --border: rgba(8,145,178,0.28);
+    }
+    html[data-theme="dark"] {
+      --bg: #070b12; --card: #0f1621; --sidebar: #0a1018; --accent: #22d3ee;
+      --accent-bright: #67e8f9; --text: #f0f9ff; --muted: #94a3b8;
+      --border: rgba(34,211,238,0.22);
+    }
+    body { font-family: 'Outfit', 'Segoe UI', system-ui, sans-serif !important; -webkit-font-smoothing: antialiased; letter-spacing: 0; }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card); color: var(--text); cursor: pointer; margin-left: auto;
+      display: inline-flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+
+  
+    /* Floating theme swipe */
+    .theme-fab {
+      position: fixed;
+      right: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      width: 72px;
+      height: 36px;
+      padding: 3px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-card, var(--card, #fff));
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .theme-fab-knob {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--gradient, linear-gradient(135deg, #22d3ee, #0891b2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(8, 145, 178, 0.35);
+      color: #fff;
+    }
+    [data-theme="dark"] .theme-fab-knob {
+      transform: translateX(36px);
+    }
+    .theme-fab-track {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      pointer-events: none;
+      font-size: 0.7rem;
+      opacity: 0.55;
+    }
+
+  </style>
+
+
+<script>
+(function(){
+  var t = localStorage.getItem('mc_theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  function sync(){
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var knob = document.getElementById('themeKnob');
+    if (knob) knob.textContent = dark ? '🌙' : '☀️';
+  }
+  function bind(){
+    sync();
+    var b = document.getElementById('themeToggle');
+    if (!b || b._bound) return;
+    b._bound = true;
+    b.addEventListener('click', function(){
+      var n = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', n);
+      localStorage.setItem('mc_theme', n);
+      sync();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
+
+</head>
+<body>
+  <div id="loading">Checking auth...</div>
+
+  <aside class="sidebar">
+    <a href="/" class="brand" id="brand-link" style="text-decoration:none;display:block;cursor:pointer;" title="Go to website">
+      ⛏️ <span id="brand-name">NIGHSHADES MC</span> </a>
+    <nav>
+      <a href="#" class="active" data-section="dashboard">📊 <span>Dashboard</span></a>
+      <a href="#" data-section="settings">⚙️ <span>Site Settings</span></a>
+      <a href="#" data-section="connectors">🔌 <span>Connect Server</span></a>
+      <a href="#" data-section="pages">📄 <span>Pages</span></a>
+      <a href="#" data-section="categories">🗂️ <span>Categories</span></a>
+      <a href="#" data-section="products">🎁 <span>Products</span></a>
+      <a href="#" data-section="coupons">🏷️ <span>Coupons & Referral</span></a>
+      <a href="#" data-section="payments">💳 <span>Payments</span></a>
+      <a href="#" data-section="users">👥 <span>Users</span></a>
+    </nav>
+    <div class="bottom">
+      <a href="/">← <span>Back to Website</span></a><br /><br />
+      <a href="#" id="logout">Logout</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Dashboard -->
+    <section class="section active" id="section-dashboard">
+      <h1 class="page-title">Dashboard</h1>
+      <div class="stats">
+        <div class="stat-card green">
+          <div class="label">Sales Today</div>
+          <div class="value" id="sales-today">₹0</div>
+          <div class="sub" id="sales-today-count">0 orders</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="label">Sales This Week</div>
+          <div class="value" id="sales-week">₹0</div>
+          <div class="sub" id="sales-week-count">0 orders</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="label">Live Users</div>
+          <div class="value" id="live-users">0</div>
+          <div class="sub">last 15 min</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="label">Total Users</div>
+          <div class="value" id="total-users">0</div>
+          <div class="sub">registered</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <div class="panel">
+          <h2>🏆 Top Buys</h2>
+          <ul class="top-list" id="top-buys">
+            <li style="color:var(--muted)">No sales yet</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h2>🛒 Recent Sales</h2>
+          <ul class="top-list" id="recent-sales">
+            <li style="color:var(--muted)">No sales yet</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="section" id="section-settings">
+      <h1 class="page-title">Site Settings</h1>
+      <div class="msg" id="settings-msg"></div>
+
+      <div class="panel">
+        <h2>🌐 Website Info</h2>
+        <form id="settingsForm">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Server Name</label>
+              <input type="text" id="siteName" required />
+            </div>
+            <div class="form-group">
+              <label>Server IP</label>
+              <input type="text" id="serverIP" required />
+            </div>
+            <div class="form-group">
+              <label>Port</label>
+              <input type="text" id="serverPort" required />
+            </div>
+            <div class="form-group">
+              <label>Discord Link (optional)</label>
+              <input type="text" id="discordLink" placeholder="https://discord.gg/..." />
+            </div>
+            <div class="form-group full">
+              <label>Logo (optional)</label>
+              <input type="file" id="logo" accept="image/*" />
+              <img id="logoPreview" class="logo-preview" style="display:none;" />
+            </div>
+            <div class="form-group">
+              <label>UPI ID (for payments)</label>
+              <input type="text" id="upiId" placeholder="yourname@upi" />
+            </div>
+            <div class="form-group full">
+              <label>UPI QR Code image</label>
+              <input type="file" id="upiQr" accept="image/*" />
+              <img id="upiQrPreview" class="logo-preview" style="display:none;max-width:160px;margin-top:0.5rem;" />
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:1.4rem 0;" />
+
+          <h2 style="margin-bottom:0.8rem;">🎨 Look &amp; Feel</h2>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Background type</label>
+              <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.35rem;">
+                <label style="font-weight:500;"><input type="radio" name="bgType" value="default" checked /> Preset</label>
+                <label style="font-weight:500;"><input type="radio" name="bgType" value="image" /> Image URL</label>
+                <label style="font-weight:500;"><input type="radio" name="bgType" value="live" /> Live / GIF</label>
+              </div>
+            </div>
+            <div class="form-group full" id="bgDefaultBox">
+              <label>Preset (click one)</label>
+              <div id="bgPresets" style="display:grid;grid-template-columns:repeat(5,1fr);gap:0.45rem;margin-top:0.4rem;"></div>
+            </div>
+            <div class="form-group full" id="bgImageBox" style="display:none;">
+              <label>Image URL</label>
+              <input type="url" id="bgImageUrl" placeholder="https://..." />
+            </div>
+            <div class="form-group full" id="bgLiveBox" style="display:none;">
+              <label>Live / GIF / Video URL</label>
+              <input type="url" id="bgLiveUrl" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label>Accent</label>
+              <input type="color" id="c-accent" value="#06b6d4" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Background</label>
+              <input type="color" id="c-bg" value="#f5fffe" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Text</label>
+              <input type="color" id="c-text" value="#0f172a" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Card</label>
+              <input type="color" id="c-card" value="#ffffff" style="width:100%;height:38px;border:none;border-radius:8px;" />
+            </div>
+            <div class="form-group">
+              <label>Particles</label>
+              <select id="particleType">
+                <option value="0">Dots soft</option>
+                <option value="1">Dots bright</option>
+                <option value="2">Stars</option>
+                <option value="3">Snow</option>
+                <option value="4">Rain</option>
+                <option value="5">Embers</option>
+                <option value="6">Leaves</option>
+                <option value="7">Bubbles</option>
+                <option value="8">Sparks</option>
+                <option value="9">Hearts</option>
+                <option value="10">Diamonds</option>
+                <option value="11">Squares</option>
+                <option value="12">Triangles</option>
+                <option value="13">Crosses</option>
+                <option value="14">Glitch</option>
+                <option value="15">Neon orbs</option>
+                <option value="16">Fireflies</option>
+                <option value="17">Ash</option>
+                <option value="18">Confetti</option>
+                <option value="19">Matrix</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:0.5rem;margin-top:1.6rem;cursor:pointer;">
+                <input type="checkbox" id="particlesEnabled" checked /> Particles on
+              </label>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:1.4rem 0;" />
+
+          <h2 style="margin-bottom:0.6rem;">🔧 Maintenance</h2>
+          <label style="display:flex;align-items:center;gap:0.55rem;cursor:pointer;font-weight:500;">
+            <input type="checkbox" id="maintMode" />
+            Enable maintenance mode <span style="color:var(--muted);font-weight:400;font-size:0.85rem;">(members only — admins still see site)</span>
+          </label>
+
+          <button type="submit" class="btn" id="btnSaveSettings" style="margin-top:1.3rem;">Save Settings</button>
+          <div id="settingsLoading" style="display:none;align-items:center;gap:0.6rem;color:var(--muted);font-size:0.9rem;margin-top:0.75rem;">
+            <span style="width:18px;height:18px;border:2px solid rgba(6,182,212,0.3);border-top-color:#06b6d4;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite;"></span>
+            Saving settings...
+          </div>
+        </form>
+      </div>
+    </section>
+
+
+    <section class="section" id="section-connectors">
+      <h1 class="page-title">Connect Server</h1>
+      <div class="panel">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+          Link Paper servers to this website. Generate a code, put it in the plugin config — status shows Connected automatically.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:1.2rem;">
+          <button type="button" class="btn" id="btnDownloadPlugin">⬇ Download Plugin</button>
+          <button type="button" class="btn btn-outline" id="btnGenConnector">+ Generate Code</button>
+        </div>
+        <div class="msg" id="connMsg" style="display:none;"></div>
+        <div id="connectorList"></div>
+      </div>
+    </section>
+
+
+    <!-- Store Pages -->
+    <section class="section" id="section-pages">
+      <h1 class="page-title">Pages</h1>
+      <div class="panel">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+          Create pages for your website. They appear in the top bar. Home → <strong>Visit Store</strong> opens the first page.
+        </p>
+        <div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;">
+          <input type="text" id="pageTitle" placeholder="Page title e.g. Ranks Store" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          <textarea id="pageContent" rows="5" placeholder="Page content (text)" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);resize:vertical;"></textarea>
+          <button type="button" class="btn" id="btnCreatePage">+ Create Page</button>
+          <div id="pageLoading" style="display:none;align-items:center;gap:0.6rem;color:var(--muted);font-size:0.9rem;margin-top:0.5rem;">
+            <span style="width:18px;height:18px;border:2px solid rgba(6,182,212,0.3);border-top-color:#06b6d4;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite;"></span>
+            Creating page...
+          </div>
+        </div>
+        <div class="msg" id="pageMsg" style="display:none;"></div>
+        <div id="pagesList"></div>
+      </div>
+    </section>
+
+    <!-- Categories -->
+    <section class="section" id="section-categories">
+      <h1 class="page-title">Categories</h1>
+      <div class="panel">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+          Create categories (e.g. Keys, Ranks, Crates) with name, description and logo. Assign them to any page — they show as cards on that page.
+        </p>
+        <div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;">
+          <input type="text" id="catName" placeholder="Category name e.g. Keys" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          <textarea id="catDesc" rows="3" placeholder="Description (optional)" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);resize:vertical;"></textarea>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">Logo / Icon image</label>
+            <input type="file" id="catLogo" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" style="color:var(--text);font-size:0.9rem;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">Assign to page</label>
+            <select id="catPageId" style="width:100%;padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+              <option value="">— All pages —</option>
+            </select>
+          </div>
+          <button type="button" class="btn" id="btnCreateCat">+ Create Category</button>
+          <div id="catLoading" style="display:none;align-items:center;gap:0.6rem;color:var(--muted);font-size:0.9rem;margin-top:0.5rem;">
+            <span style="width:18px;height:18px;border:2px solid rgba(6,182,212,0.3);border-top-color:#06b6d4;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite;"></span>
+            Creating category...
+          </div>
+        </div>
+        <div class="msg" id="catMsg" style="display:none;"></div>
+        <div id="categoriesList"></div>
+      </div>
+    </section>
+
+    <!-- Products -->
+    <section class="section" id="section-products">
+      <h1 class="page-title">Products</h1>
+      <div class="panel">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+          Create products under a category. Set price, image, descriptions, and console commands.
+          Use <code style="background:#e0f7fa;padding:0.1rem 0.35rem;border-radius:4px;">%playername%</code> — it becomes the buyer's Minecraft username on purchase.
+        </p>
+        <div style="display:grid;gap:0.75rem;margin-bottom:1.25rem;">
+          <input type="text" id="prodName" placeholder="Product name" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          <textarea id="prodShort" rows="2" placeholder="Short description (shown on category page, Enter = new line)" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);resize:vertical;"></textarea>
+          <textarea id="prodFull" rows="5" placeholder="Full description (product page, Enter = new line)" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);resize:vertical;"></textarea>
+          <input type="number" id="prodPrice" min="0" step="0.01" placeholder="Price (e.g. 99.00)" style="padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+                    <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">1. Page</label>
+            <select id="prodPageId" style="width:100%;padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+              <option value="">— Select page first —</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">2. Category (on that page)</label>
+            <select id="prodCatId" style="width:100%;padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" disabled>
+              <option value="">— Select page first —</option>
+            </select>
+            <div id="prodCatHint" style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem;"></div>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">3. Server (commands run here — online only preferred)</label>
+            <select id="prodConnectorId" style="width:100%;padding:0.6rem 0.8rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+              <option value="">— Any online server —</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">Product image (category / list page)</label>
+            <input type="file" id="prodImage" accept="image/png,image/jpeg,image/gif,image/webp" style="color:var(--text);font-size:0.9rem;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.35rem;">Description image (View Full Product page)</label>
+            <input type="file" id="prodDescImage" accept="image/png,image/jpeg,image/gif,image/webp" style="color:var(--text);font-size:0.9rem;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:0.85rem;color:var(--muted);margin-bottom:0.5rem;">Console commands — use <code style="background:#e0f7fa;padding:0.1rem 0.3rem;border-radius:4px;">%playername%</code></label>
+            <div id="cmdList" style="display:grid;gap:0.5rem;"></div>
+            <button type="button" class="btn btn-outline" id="btnAddCmd" style="margin-top:0.5rem;padding:0.4rem 0.8rem;font-size:0.85rem;">+ Add more command</button>
+          </div>
+          <button type="button" class="btn" id="btnCreateProd">+ Create Product</button>
+          <div id="prodLoading" style="display:none;align-items:center;gap:0.6rem;color:var(--muted);font-size:0.9rem;margin-top:0.5rem;">
+            <span class="spin" style="width:18px;height:18px;border:2px solid rgba(6,182,212,0.3);border-top-color:#06b6d4;border-radius:50%;display:inline-block;animation:spin 0.7s linear infinite;"></span>
+            Creating product...
+          </div>
+        </div>
+        <div class="msg" id="prodMsg" style="display:none;"></div>
+        <div id="productsList"></div>
+      </div>
+    </section>
+
+
+    <!-- Coupons & Referral -->
+    <section class="section" id="section-coupons">
+      <h1 class="page-title">Coupons & Referral</h1>
+      <div class="panel" style="margin-bottom:1.25rem;">
+        <h2 style="margin-bottom:0.75rem;">Referral settings</h2>
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+          Members share link: <code>/register.html?ref=THEIRCODE</code> — buyer can also enter referral code at checkout for discount.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;max-width:720px;">
+          <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
+            <input type="checkbox" id="referralEnabled" checked /> Enable referral discount
+          </label>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Referral % off</label>
+            <input type="number" id="referralDiscountPercent" value="5" min="0" max="100" step="0.1" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Min order ₹ (referral)</label>
+            <input type="number" id="referralMinOrder" value="0" min="0" step="1" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+        </div>
+        <button type="button" class="btn" id="btnSaveReferral" style="margin-top:1rem;">Save referral settings</button>
+        <div class="msg" id="refMsg" style="display:none;margin-top:0.75rem;"></div>
+      </div>
+      <div class="panel">
+        <h2 style="margin-bottom:0.75rem;">Create coupon</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Code</label>
+            <input type="text" id="cpCode" placeholder="WELCOME10" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);text-transform:uppercase;" />
+          </div>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Type</label>
+            <select id="cpType" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+              <option value="percent">Percent %</option>
+              <option value="fixed">Fixed ₹</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Value</label>
+            <input type="number" id="cpValue" placeholder="10" min="0" step="0.01" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Min order ₹ (0 = none)</label>
+            <input type="number" id="cpMinOrder" value="0" min="0" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Max uses (empty = unlimited)</label>
+            <input type="number" id="cpMaxUses" placeholder="Unlimited" min="1" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+          <div>
+            <label style="font-size:0.85rem;color:var(--muted);">Expires (optional)</label>
+            <input type="date" id="cpExpires" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="font-size:0.85rem;color:var(--muted);">Apply to</label>
+            <select id="cpScope" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+              <option value="all">All products</option>
+              <option value="products">Selected products only</option>
+            </select>
+          </div>
+          <div id="cpProductsWrap" style="grid-column:1/-1;display:none;">
+            <label style="font-size:0.85rem;color:var(--muted);">Select products</label>
+            <div id="cpProductChecks" style="max-height:180px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:0.75rem;margin-top:0.35rem;"></div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="font-size:0.85rem;color:var(--muted);">Note (optional)</label>
+            <input type="text" id="cpNote" placeholder="Launch offer" style="width:100%;padding:0.55rem 0.75rem;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);" />
+          </div>
+        </div>
+        <button type="button" class="btn" id="btnCreateCoupon" style="margin-top:1rem;">+ Create coupon</button>
+        <div class="msg" id="cpMsg" style="display:none;margin-top:0.75rem;"></div>
+        <hr style="border:none;border-top:1px solid var(--border);margin:1.5rem 0;" />
+        <h2 style="margin-bottom:0.75rem;">All coupons</h2>
+        <div id="couponsList"></div>
+      </div>
+    </section>
+
+    <!-- Payments -->
+    <section class="section" id="section-payments">
+      <h1 class="page-title">Payments</h1>
+      <div class="panel">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1rem;">
+          Manual UPI payments. Approve to deliver product (run commands). Reject or delete if invalid.
+        </p>
+        <div id="paymentsList"></div>
+      </div>
+    </section>
+
+    <!-- Users -->
+    <section class="section" id="section-users">
+      <h1 class="page-title">Users</h1>
+      <div class="panel">
+        <table>
+          <thead>
+            <tr>
+              <th>MC Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Mobile</th>
+              <th>Joined</th>
+            </tr>
+          </thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </section>
+  
+
+  </main>
+
+  <script>
+    // Auth check
+    async function init() {
+      try {
+        const res = await fetch('/api/me', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || data.user.role !== 'admin') {
+          location.href = '/login.html';
+          return;
+        }
+        document.getElementById('loading').style.display = 'none';
+        // Site name on brand (click goes home)
+        fetch('/api/settings').then(r => r.json()).then(s => {
+          if (s.success) {
+            document.getElementById('brand-name').textContent = s.settings.siteName;
+            const url = s.settings.favicon || s.settings.logo;
+            if (url) {
+              let link = document.querySelector("link[rel='icon']") || document.createElement('link');
+              link.rel = 'icon';
+              link.href = url;
+              document.head.appendChild(link);
+            }
+          }
+        }).catch(() => {});
+        loadDashboard();
+        loadSettings();
+        loadUsers();
+        loadConnectors();
+        loadPages();
+        loadCategories();
+        loadProducts();
+        loadPayments();
+      } catch {
+        location.href = '/login.html';
+      }
+    }
+    init();
+
+    // Sidebar navigation
+    document.querySelectorAll('.sidebar nav a').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar nav a').forEach(x => x.classList.remove('active'));
+        a.classList.add('active');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section-' + a.dataset.section).classList.add('active');
+      });
+    });
+
+    document.getElementById('logout').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      location.href = '/';
+    });
+
+    async function loadDashboard() {
+      const res = await fetch('/api/admin/dashboard', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+      const d = data.dashboard;
+      document.getElementById('sales-today').textContent = '₹' + d.salesToday;
+      document.getElementById('sales-today-count').textContent = d.salesTodayCount + ' orders';
+      document.getElementById('sales-week').textContent = '₹' + d.salesWeek;
+      document.getElementById('sales-week-count').textContent = d.salesWeekCount + ' orders';
+      document.getElementById('live-users').textContent = d.liveUsers;
+      document.getElementById('total-users').textContent = d.totalUsers;
+
+      const topEl = document.getElementById('top-buys');
+      if (d.topBuys.length === 0) {
+        topEl.innerHTML = '<li style="color:var(--muted)">No sales yet</li>';
+      } else {
+        topEl.innerHTML = d.topBuys.map(t =>
+          `<li><span>${t.name}</span><strong>${t.count}x</strong></li>`
+        ).join('');
+      }
+
+      const recentEl = document.getElementById('recent-sales');
+      if (d.recentSales.length === 0) {
+        recentEl.innerHTML = '<li style="color:var(--muted)">No sales yet</li>';
+      } else {
+        recentEl.innerHTML = d.recentSales.map(s =>
+          `<li><span>${s.product}</span><strong>₹${s.amount}</strong></li>`
+        ).join('');
+      }
+    }
+
+    const PRESET_COLORS = [
+      'linear-gradient(135deg,#0a1628,#0d2818)',
+      'linear-gradient(135deg,#1a0a2e,#0f172a)',
+      'linear-gradient(135deg,#0c1222,#1e3a5f)',
+      'linear-gradient(160deg,#0f0f0f,#1a3a2a)',
+      'linear-gradient(135deg,#1c0a0a,#2d1b0e)',
+      'linear-gradient(135deg,#0a1a1a,#0e3d3d)',
+      'linear-gradient(135deg,#150a20,#2a1040)',
+      'linear-gradient(135deg,#0a0f1a,#1a2744)',
+      'linear-gradient(135deg,#101820,#1c3a3a)',
+      'linear-gradient(135deg,#0d1117,#161b22)'
+    ];
+
+    function initBgPresets() {
+      const box = document.getElementById('bgPresets');
+      if (!box || box.dataset.ready) return;
+      box.dataset.ready = '1';
+      PRESET_COLORS.forEach((g, i) => {
+        const d = document.createElement('div');
+        d.dataset.i = i;
+        d.style.cssText = 'height:48px;border-radius:8px;cursor:pointer;border:2px solid transparent;background:' + g;
+        d.onclick = () => {
+          box.querySelectorAll('div').forEach(x => x.style.borderColor = 'transparent');
+          d.style.borderColor = '#06b6d4';
+          box.dataset.selected = String(i);
+        };
+        box.appendChild(d);
+      });
+    }
+
+    function syncBgTypeUI() {
+      const v = document.querySelector('input[name="bgType"]:checked')?.value || 'default';
+      document.getElementById('bgDefaultBox').style.display = v === 'default' ? 'block' : 'none';
+      document.getElementById('bgImageBox').style.display = v === 'image' ? 'block' : 'none';
+      document.getElementById('bgLiveBox').style.display = v === 'live' ? 'block' : 'none';
+    }
+
+    async function loadSettings() {
+      initBgPresets();
+      const res = await fetch('/api/settings');
+      const data = await res.json();
+      if (!data.success) return;
+      const s = data.settings;
+      document.getElementById('siteName').value = s.siteName || '';
+      document.getElementById('serverIP').value = s.serverIP || '';
+      document.getElementById('serverPort').value = s.serverPort || '';
+      document.getElementById('discordLink').value = s.discordLink || '';
+      if (document.getElementById('upiId')) document.getElementById('upiId').value = s.upiId || '';
+      if (s.upiQr && document.getElementById('upiQrPreview')) {
+        document.getElementById('upiQrPreview').src = s.upiQr;
+        document.getElementById('upiQrPreview').style.display = 'block';
+      }
+      if (s.logo) {
+        const img = document.getElementById('logoPreview');
+        img.src = s.logo;
+        img.style.display = 'block';
+      }
+      const bt = s.bgType || 'default';
+      const radio = document.querySelector('input[name="bgType"][value="' + bt + '"]');
+      if (radio) radio.checked = true;
+      syncBgTypeUI();
+      const box = document.getElementById('bgPresets');
+      const idx = parseInt(s.bgDefault, 10) || 0;
+      if (box) {
+        box.dataset.selected = String(idx);
+        box.querySelectorAll('div').forEach((d, i) => {
+          d.style.borderColor = i === idx ? '#06b6d4' : 'transparent';
+        });
+      }
+      document.getElementById('bgImageUrl').value = s.bgImageUrl || '';
+      document.getElementById('bgLiveUrl').value = s.bgLiveUrl || '';
+      document.getElementById('particlesEnabled').checked = s.particlesEnabled !== false;
+      document.getElementById('particleType').value = String(s.particleType || 0);
+      document.getElementById('maintMode').checked = !!s.maintenanceMode;
+      const c = s.colors || {};
+      if (c.bg) document.getElementById('c-bg').value = c.bg;
+      if (c.card) document.getElementById('c-card').value = c.card;
+      if (c.accent) document.getElementById('c-accent').value = c.accent;
+      if (c.text) document.getElementById('c-text').value = c.text;
+    }
+
+    document.querySelectorAll('input[name="bgType"]').forEach(r => {
+      r.addEventListener('change', syncBgTypeUI);
+    });
+
+    document.getElementById('logo').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const img = document.getElementById('logoPreview');
+        img.src = URL.createObjectURL(file);
+        img.style.display = 'block';
+      }
+    });
+
+    document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('settings-msg');
+      const loading = document.getElementById('settingsLoading');
+      const btn = document.getElementById('btnSaveSettings');
+      const formData = new FormData();
+      formData.append('siteName', document.getElementById('siteName').value.trim());
+      formData.append('serverIP', document.getElementById('serverIP').value.trim());
+      formData.append('serverPort', document.getElementById('serverPort').value.trim());
+      formData.append('discordLink', document.getElementById('discordLink').value.trim());
+      formData.append('upiId', (document.getElementById('upiId')?.value || '').trim());
+      const upiQrFile = document.getElementById('upiQr');
+      if (upiQrFile && upiQrFile.files && upiQrFile.files[0]) formData.append('upiQr', upiQrFile.files[0]);
+      const logoEl = document.getElementById('logo');
+      if (logoEl && logoEl.files && logoEl.files[0]) formData.append('logo', logoEl.files[0]);
+      formData.append('bgType', document.querySelector('input[name="bgType"]:checked')?.value || 'default');
+      formData.append('bgDefault', document.getElementById('bgPresets')?.dataset.selected || '0');
+      formData.append('bgImageUrl', (document.getElementById('bgImageUrl')?.value || '').trim());
+      formData.append('bgLiveUrl', (document.getElementById('bgLiveUrl')?.value || '').trim());
+      formData.append('particlesEnabled', document.getElementById('particlesEnabled')?.checked ? 'true' : 'false');
+      formData.append('particleType', document.getElementById('particleType')?.value || '0');
+      formData.append('maintenanceMode', document.getElementById('maintMode')?.checked ? 'true' : 'false');
+      formData.append('colors', JSON.stringify({
+        bg: document.getElementById('c-bg')?.value || '#070b12',
+        card: document.getElementById('c-card')?.value || '#0f1621',
+        accent: document.getElementById('c-accent')?.value || '#06b6d4',
+        accentBright: document.getElementById('c-accent')?.value || '#22d3ee',
+        text: document.getElementById('c-text')?.value || '#f0fdf4',
+        muted: '#94a3b8'
+      }));
+
+      if (loading) loading.style.display = 'flex';
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+      if (msg) { msg.className = 'msg'; msg.textContent = ''; msg.style.display = 'none'; }
+
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'PUT',
+          credentials: 'include',
+          body: formData
+        });
+        const data = await res.json();
+        if (msg) msg.style.display = 'block';
+        if (data.success) {
+          if (msg) { msg.className = 'msg ok'; msg.textContent = 'Settings saved! UPI & site updated.'; }
+          if (data.settings?.siteName) {
+            const brand = document.getElementById('brand-name');
+            if (brand) brand.textContent = data.settings.siteName;
+          }
+          if (data.settings?.logo) {
+            const prev = document.getElementById('logoPreview');
+            if (prev) { prev.src = data.settings.logo; prev.style.display = 'block'; }
+          }
+          if (data.settings?.upiQr) {
+            const uq = document.getElementById('upiQrPreview');
+            if (uq) { uq.src = data.settings.upiQr; uq.style.display = 'block'; }
+          }
+          if (data.settings?.upiId && document.getElementById('upiId')) {
+            document.getElementById('upiId').value = data.settings.upiId;
+          }
+        } else {
+          if (msg) { msg.className = 'msg err'; msg.textContent = data.message || 'Failed to save'; }
+        }
+      } catch (err) {
+        if (msg) { msg.style.display = 'block'; msg.className = 'msg err'; msg.textContent = 'Failed to save settings'; }
+      }
+      if (loading) loading.style.display = 'none';
+      if (btn) { btn.disabled = false; btn.textContent = 'Save Settings'; }
+    });
+
+    async function loadUsers() {
+      const res = await fetch('/api/admin/users', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.success) return;
+      const tbody = document.getElementById('users-table');
+      tbody.innerHTML = data.users.map(u => `
+        <tr>
+          <td><strong>${u.mcUsername}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="badge ${u.role}">${u.role}</span></td>
+          <td>${u.mobile || '—'}</td>
+          <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+        </tr>
+      `).join('');
+    }
+  
+
+    async function loadConnectors() {
+      const box = document.getElementById('connectorList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/connectors', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.connectors.length) {
+          box.innerHTML = '<p style="color:var(--muted);">No servers yet. Click Generate Code.</p>';
+          return;
+        }
+        box.innerHTML = data.connectors.map(c => {
+          const status = c.connected
+            ? '<span style="color:#22d3ee;font-weight:700;">● Connected</span>'
+            : '<span style="color:#f87171;font-weight:700;">○ Not connected</span>';
+          const last = c.lastSeen ? new Date(c.lastSeen).toLocaleString() : 'Never';
+          return `<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem;display:flex;flex-wrap:wrap;gap:0.8rem;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:700;font-size:1.05rem;">${escapeHtml(c.name)}</div>
+              <div style="margin-top:0.35rem;font-family:monospace;letter-spacing:0.04em;user-select:all;background:var(--card);padding:0.35rem 0.6rem;border-radius:8px;display:inline-block;">${escapeHtml(c.code)}</div>
+              <div style="margin-top:0.4rem;font-size:0.8rem;color:var(--muted);">Last seen: ${last}${c.serverVersion ? ' · ' + escapeHtml(c.serverVersion) : ''}${c.connected ? ' · ' + c.playersOnline + ' players' : ''}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
+              ${status}
+              <div style="display:flex;gap:0.4rem;">
+                <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-refresh="${c.id}">↻ Refresh</button>
+                <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-del="${c.id}">Delete</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+        box.querySelectorAll('[data-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete this server connector?')) return;
+            await fetch('/api/admin/connectors/' + btn.dataset.del, { method: 'DELETE', credentials: 'include' });
+            loadConnectors();
+        loadPages();
+          };
+        });
+        box.querySelectorAll('[data-refresh]').forEach(btn => {
+          btn.onclick = () => loadConnectors();
+        loadPages();
+        });
+      } catch (e) {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load</p>';
+      }
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    document.getElementById('btnGenConnector')?.addEventListener('click', async () => {
+      const name = prompt('Server name (e.g. LIFESTEAL)');
+      if (!name || !name.trim()) return;
+      const msg = document.getElementById('connMsg');
+      try {
+        const res = await fetch('/api/admin/connectors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name: name.trim() })
+        });
+        const data = await res.json();
+        msg.style.display = 'block';
+        if (data.success) {
+          msg.className = 'msg ok';
+          msg.textContent = 'Code generated for ' + data.connector.name + ': ' + data.connector.code;
+          loadConnectors();
+        loadPages();
+        } else {
+          msg.className = 'msg err';
+          msg.textContent = data.message || 'Failed';
+        }
+      } catch {
+        msg.style.display = 'block';
+        msg.className = 'msg err';
+        msg.textContent = 'Failed';
+      }
+    });
+
+    async function loadPages() {
+      const box = document.getElementById('pagesList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/pages', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.pages.length) {
+          box.innerHTML = '<p style="color:var(--muted);">No pages yet. Create one above — Visit Store will stay on home until then.</p>';
+          return;
+        }
+        box.innerHTML = data.pages.map((p, i) => `
+          <div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.6rem;display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:700;">${i === 0 ? '⭐ ' : ''}${escapeHtml(p.title)}</div>
+              <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">/${escapeHtml(p.slug)} · order ${p.order || 0}</div>
+              <div style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml((p.content||'').slice(0,120))}</div>
+            </div>
+            <div style="display:flex;gap:0.4rem;">
+              <a class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;text-decoration:none;" href="/page.html?slug=${encodeURIComponent(p.slug)}" target="_blank">Open</a>
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-page-del="${p.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        box.querySelectorAll('[data-page-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete this page?')) return;
+            await fetch('/api/admin/pages/' + btn.dataset.pageDel, { method: 'DELETE', credentials: 'include' });
+            loadPages();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load pages</p>';
+      }
+    }
+    document.getElementById('btnCreatePage')?.addEventListener('click', async () => {
+      const title = (document.getElementById('pageTitle')?.value || '').trim();
+      const content = document.getElementById('pageContent')?.value || '';
+      const msg = document.getElementById('pageMsg');
+      const loading = document.getElementById('pageLoading');
+      const btn = document.getElementById('btnCreatePage');
+      if (!title) { alert('Title required'); return; }
+      if (loading) loading.style.display = 'flex';
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch('/api/admin/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ title, content })
+        });
+        const data = await res.json();
+        msg.style.display = 'block';
+        if (data.success) {
+          msg.className = 'msg ok';
+          msg.textContent = 'Page created: ' + data.page.title;
+          document.getElementById('pageTitle').value = '';
+          document.getElementById('pageContent').value = '';
+          loadPages();
+        } else {
+          msg.className = 'msg err';
+          msg.textContent = data.message || 'Failed';
+        }
+      } catch {
+        msg.style.display = 'block';
+        msg.className = 'msg err';
+        msg.textContent = 'Failed';
+      }
+      if (loading) loading.style.display = 'none';
+      if (btn) btn.disabled = false;
+    });
+
+
+    // ---------- Categories ----------
+    async function fillCatPageSelect() {
+      const sel = document.getElementById('catPageId');
+      if (!sel) return;
+      const current = sel.value;
+      try {
+        const res = await fetch('/api/admin/pages', { credentials: 'include' });
+        const data = await res.json();
+        sel.innerHTML = '<option value="">— All pages —</option>';
+        if (data.success && data.pages) {
+          data.pages.forEach(pg => {
+            const opt = document.createElement('option');
+            opt.value = pg.id;
+            opt.textContent = pg.title;
+            sel.appendChild(opt);
+          });
+        }
+        if (current) sel.value = current;
+      } catch {}
+    }
+
+    let editingCatId = null;
+    async function loadCategories() {
+      const box = document.getElementById('categoriesList');
+      if (!box) return;
+      await fillCatPageSelect();
+      try {
+        const res = await fetch('/api/admin/categories', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.categories.length) {
+          box.innerHTML = '<p style="color:var(--muted);">No categories yet. Create one above (e.g. Keys with a key icon).</p>';
+          return;
+        }
+        let pageMap = {};
+        try {
+          const pr = await fetch('/api/admin/pages', { credentials: 'include' });
+          const pd = await pr.json();
+          if (pd.success && pd.pages) pd.pages.forEach(pg => { pageMap[pg.id] = pg.title; });
+        } catch {}
+        box.innerHTML = data.categories.map(c => {
+          const en = c.enabled !== false;
+          const payload = JSON.stringify({id:c.id,name:c.name,description:c.description||'',pageId:c.pageId||''}).replace(/'/g, "&#39;");
+          return `
+          <div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.6rem;display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;opacity:${en ? '1' : '0.55'};">
+            <div style="display:flex;gap:0.85rem;align-items:center;min-width:0;flex:1;">
+              ${c.logo ? '<img src="' + escapeHtml(c.logo) + '" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;border:1px solid var(--border);" />' : '<div style="width:48px;height:48px;border-radius:10px;background:rgba(6,182,212,0.15);display:flex;align-items:center;justify-content:center;font-size:1.25rem;">📦</div>'}
+              <div style="min-width:0;">
+                <div style="font-weight:700;">${escapeHtml(c.name)} ${en ? '' : '<span style="font-size:0.75rem;color:#f59e0b;">(Disabled)</span>'}</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem;">${c.pageId ? ('Page: ' + escapeHtml(pageMap[c.pageId] || c.pageId)) : 'All pages'}</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml((c.description||'').slice(0,100))}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-cat-edit="${c.id}">Edit</button>
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-cat-toggle="${c.id}" data-enabled="${en ? '1' : '0'}">${en ? 'Disable' : 'Enable'}</button>
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;color:#f87171;border-color:rgba(248,113,113,0.4);" data-cat-del="${c.id}">Delete</button>
+            </div>
+          </div>`;
+        }).join('');
+        // store raw data for edit
+        window.__catsCache = data.categories;
+        box.querySelectorAll('[data-cat-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete this category?')) return;
+            await fetch('/api/admin/categories/' + btn.dataset.catDel, { method: 'DELETE', credentials: 'include' });
+            loadCategories();
+          };
+        });
+        box.querySelectorAll('[data-cat-toggle]').forEach(btn => {
+          btn.onclick = async () => {
+            const id = btn.dataset.catToggle;
+            const next = btn.dataset.enabled !== '1';
+            const fd = new FormData();
+            fd.append('enabled', next ? 'true' : 'false');
+            // need name for PUT validation
+            const cat = (window.__catsCache || []).find(x => x.id === id);
+            if (cat) fd.append('name', cat.name);
+            await fetch('/api/admin/categories/' + id, { method: 'PUT', credentials: 'include', body: fd });
+            loadCategories();
+          };
+        });
+        box.querySelectorAll('[data-cat-edit]').forEach(btn => {
+          btn.onclick = () => {
+            const cat = (window.__catsCache || []).find(x => x.id === btn.dataset.catEdit);
+            if (!cat) return;
+            editingCatId = cat.id;
+            document.getElementById('catName').value = cat.name || '';
+            document.getElementById('catDesc').value = cat.description || '';
+            const sel = document.getElementById('catPageId');
+            if (sel) sel.value = cat.pageId || '';
+            const b = document.getElementById('btnCreateCat');
+            if (b) b.textContent = '💾 Update Category';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load categories</p>';
+      }
+    }
+
+    document.getElementById('btnCreateCat')?.addEventListener('click', async () => {
+      const name = (document.getElementById('catName')?.value || '').trim();
+      const description = document.getElementById('catDesc')?.value || '';
+      const pageId = document.getElementById('catPageId')?.value || '';
+      const logoInput = document.getElementById('catLogo');
+      const msg = document.getElementById('catMsg');
+      const loading = document.getElementById('catLoading');
+      const btn = document.getElementById('btnCreateCat');
+      if (!name) { alert('Category name required'); return; }
+      const fd = new FormData();
+      fd.append('name', name);
+      fd.append('description', description);
+      fd.append('pageId', pageId);
+      if (logoInput && logoInput.files && logoInput.files[0]) {
+        fd.append('logo', logoInput.files[0]);
+      }
+      if (loading) loading.style.display = 'flex';
+      if (btn) btn.disabled = true;
+      try {
+        const isEdit = !!editingCatId;
+        const url = isEdit ? ('/api/admin/categories/' + editingCatId) : '/api/admin/categories';
+        const res = await fetch(url, {
+          method: isEdit ? 'PUT' : 'POST',
+          credentials: 'include',
+          body: fd
+        });
+        const data = await res.json();
+        msg.style.display = 'block';
+        if (data.success) {
+          msg.className = 'msg ok';
+          msg.textContent = isEdit ? ('Updated: ' + name) : ('Category created: ' + data.category.name);
+          document.getElementById('catName').value = '';
+          document.getElementById('catDesc').value = '';
+          if (logoInput) logoInput.value = '';
+          editingCatId = null;
+          if (btn) btn.textContent = '+ Create Category';
+          loadCategories();
+        } else {
+          msg.className = 'msg err';
+          msg.textContent = data.message || 'Failed';
+        }
+      } catch {
+        msg.style.display = 'block';
+        msg.className = 'msg err';
+        msg.textContent = 'Failed';
+      }
+      if (loading) loading.style.display = 'none';
+      if (btn) btn.disabled = false;
+    });
+
+    // Refresh page dropdown when opening Categories tab
+    document.querySelectorAll('.sidebar nav a').forEach(a => {
+      a.addEventListener('click', () => {
+        if (a.dataset.section === 'categories') loadCategories();
+      });
+    });
+
+
+    // ---------- Products ----------
+    
+    window.__allCategories = [];
+    window.__allPages = [];
+    window.__allConnectors = [];
+
+    async function fillProdPageSelect() {
+      const sel = document.getElementById('prodPageId');
+      if (!sel) return;
+      try {
+        const res = await fetch('/api/admin/pages', { credentials: 'include' });
+        const data = await res.json();
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— Select page first —</option>';
+        window.__allPages = (data.success && data.pages) ? data.pages : [];
+        window.__allPages.forEach(pg => {
+          const opt = document.createElement('option');
+          opt.value = pg.id;
+          opt.textContent = pg.title;
+          sel.appendChild(opt);
+        });
+        if (cur) sel.value = cur;
+      } catch {}
+    }
+
+    function fillProdCatForPage(pageId, keepCatId) {
+      const sel = document.getElementById('prodCatId');
+      const hint = document.getElementById('prodCatHint');
+      if (!sel) return;
+      sel.innerHTML = '';
+      if (!pageId) {
+        sel.disabled = true;
+        sel.innerHTML = '<option value="">— Select page first —</option>';
+        if (hint) hint.textContent = '';
+        return;
+      }
+      const cats = (window.__allCategories || []).filter(c => {
+        if (c.enabled === false) return false;
+        return !c.pageId || c.pageId === pageId;
+      });
+      if (!cats.length) {
+        sel.disabled = true;
+        sel.innerHTML = '<option value="">— No categories on this page —</option>';
+        if (hint) hint.textContent = 'Is page pe pehle Categories section se category banao.';
+        return;
+      }
+      sel.disabled = false;
+      sel.innerHTML = '<option value="">— Select category —</option>';
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name + (c.pageId ? '' : ' (all pages)');
+        sel.appendChild(opt);
+      });
+      if (hint) hint.textContent = cats.length + ' categor' + (cats.length === 1 ? 'y' : 'ies') + ' available on this page.';
+      if (keepCatId) sel.value = keepCatId;
+    }
+
+    async function fillProdCatSelect() {
+      try {
+        const res = await fetch('/api/admin/categories', { credentials: 'include' });
+        const data = await res.json();
+        window.__allCategories = (data.success && data.categories) ? data.categories : [];
+      } catch { window.__allCategories = []; }
+      await fillProdPageSelect();
+      await fillProdConnectorSelect();
+      const pageSel = document.getElementById('prodPageId');
+      fillProdCatForPage(pageSel ? pageSel.value : '');
+    }
+
+    async function fillProdConnectorSelect() {
+      const sel = document.getElementById('prodConnectorId');
+      if (!sel) return;
+      try {
+        const res = await fetch('/api/admin/connectors', { credentials: 'include' });
+        const data = await res.json();
+        const cur = sel.value;
+        window.__allConnectors = (data.success && data.connectors) ? data.connectors : [];
+        sel.innerHTML = '<option value="">— Any online server —</option>';
+        window.__allConnectors.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          const st = c.connected ? '🟢 Online' : '⚫ Offline';
+          opt.textContent = st + ' — ' + (c.name || c.id);
+          if (!c.connected) opt.disabled = false; // still selectable but labeled offline
+          sel.appendChild(opt);
+        });
+        if (cur) sel.value = cur;
+      } catch {}
+    }
+
+    document.getElementById('prodPageId')?.addEventListener('change', () => {
+      fillProdCatForPage(document.getElementById('prodPageId').value);
+    });
+
+
+
+    
+    function addCmdRow(value) {
+      const list = document.getElementById('cmdList');
+      if (!list) return;
+      const row = document.createElement('div');
+      row.className = 'cmd-row';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'e.g. give %playername% diamond 1';
+      input.value = value || '';
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.textContent = 'Remove';
+      rm.onclick = () => {
+        if (list.children.length > 1) row.remove();
+        else input.value = '';
+      };
+      row.appendChild(input);
+      row.appendChild(rm);
+      list.appendChild(row);
+    }
+    function initCmdList() {
+      const list = document.getElementById('cmdList');
+      if (!list) return;
+      list.innerHTML = '';
+      addCmdRow('');
+    }
+    document.getElementById('btnAddCmd')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      addCmdRow('');
+    });
+    // init on load
+    if (document.getElementById('cmdList')) initCmdList();
+
+let editingProdId = null;
+    async function loadProducts() {
+      const box = document.getElementById('productsList');
+      if (!box) return;
+      await fillProdCatSelect();
+      try {
+        const res = await fetch('/api/admin/products', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.products.length) {
+          box.innerHTML = '<p style="color:var(--muted);">No products yet. Create a category first, then add products.</p>';
+          return;
+        }
+        let catMap = {};
+        try {
+          const cr = await fetch('/api/admin/categories', { credentials: 'include' });
+          const cd = await cr.json();
+          if (cd.success && cd.categories) cd.categories.forEach(c => { catMap[c.id] = c.name; });
+        } catch {}
+        const maxSales = data.products.reduce((m, x) => Math.max(m, x.salesCount || 0), 0);
+        window.__prodsCache = data.products;
+        box.innerHTML = data.products.map(pr => {
+          const en = pr.enabled !== false;
+          const pop = maxSales > 0 && (pr.salesCount || 0) === maxSales && maxSales >= 1
+            ? ' <span style="color:#f59e0b;font-size:0.75rem;">🔥 Popular</span>' : '';
+          const cmds = (pr.commands || []).length;
+          const conn = (window.__allConnectors || []).find(c => c.id === pr.connectorId);
+          const connLabel = conn ? (conn.name + (conn.connected ? ' 🟢' : ' ⚫')) : 'Any online';
+          return `
+          <div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.6rem;display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;opacity:${en ? '1' : '0.55'};">
+            <div style="display:flex;gap:0.85rem;align-items:center;min-width:0;flex:1;">
+              ${pr.image ? '<img src="' + escapeHtml(pr.image) + '" alt="" style="width:56px;height:56px;border-radius:10px;object-fit:cover;border:1px solid var(--border);" />' : '<div style="width:56px;height:56px;border-radius:10px;background:rgba(6,182,212,0.12);display:flex;align-items:center;justify-content:center;">🎁</div>'}
+              <div style="min-width:0;">
+                <div style="font-weight:700;">${escapeHtml(pr.name)}${pop} ${en ? '' : '<span style="font-size:0.75rem;color:#f59e0b;">(Disabled)</span>'}</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:0.2rem;">₹${Number(pr.price).toFixed(2)} · ${escapeHtml(catMap[pr.categoryId] || '—')} · ${cmds} cmd · sold ${pr.salesCount || 0} · Server: ${escapeHtml(connLabel)}</div>
+                <div style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml((pr.shortDescription||'').slice(0,100))}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+              <a class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;text-decoration:none;" href="/product.html?id=${encodeURIComponent(pr.id)}" target="_blank">Open</a>
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-prod-edit="${pr.id}">Edit</button>
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-prod-toggle="${pr.id}" data-enabled="${en ? '1' : '0'}">${en ? 'Disable' : 'Enable'}</button>
+              <button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;color:#f87171;border-color:rgba(248,113,113,0.4);" data-prod-del="${pr.id}">Delete</button>
+            </div>
+          </div>`;
+        }).join('');
+        box.querySelectorAll('[data-prod-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete this product?')) return;
+            await fetch('/api/admin/products/' + btn.dataset.prodDel, { method: 'DELETE', credentials: 'include' });
+            loadProducts();
+          };
+        });
+        box.querySelectorAll('[data-prod-toggle]').forEach(btn => {
+          btn.onclick = async () => {
+            const id = btn.dataset.prodToggle;
+            const next = btn.dataset.enabled !== '1';
+            const pr = (window.__prodsCache || []).find(x => x.id === id);
+            const fd = new FormData();
+            fd.append('enabled', next ? 'true' : 'false');
+            if (pr) {
+              fd.append('name', pr.name);
+              fd.append('categoryId', pr.categoryId || '');
+              fd.append('price', String(pr.price || 0));
+            }
+            await fetch('/api/admin/products/' + id, { method: 'PUT', credentials: 'include', body: fd });
+            loadProducts();
+          };
+        });
+        box.querySelectorAll('[data-prod-edit]').forEach(btn => {
+          btn.onclick = () => {
+            const pr = (window.__prodsCache || []).find(x => x.id === btn.dataset.prodEdit);
+            if (!pr) return;
+            editingProdId = pr.id;
+            document.getElementById('prodName').value = pr.name || '';
+            document.getElementById('prodShort').value = pr.shortDescription || '';
+            document.getElementById('prodFull').value = pr.fullDescription || '';
+            document.getElementById('prodPrice').value = pr.price != null ? pr.price : '';
+            const cat = (window.__allCategories || []).find(c => c.id === pr.categoryId);
+            const pageSel = document.getElementById('prodPageId');
+            if (pageSel) pageSel.value = (cat && cat.pageId) ? cat.pageId : (pageSel.value || '');
+            fillProdCatForPage(pageSel ? pageSel.value : '', pr.categoryId || '');
+            const connSel = document.getElementById('prodConnectorId');
+            if (connSel) connSel.value = pr.connectorId || '';
+            // commands
+            const list = document.getElementById('cmdList');
+            if (list && typeof addCmdRow === 'function') {
+              list.innerHTML = '';
+              const cmds = pr.commands && pr.commands.length ? pr.commands : [''];
+              cmds.forEach(c => addCmdRow(c));
+            }
+            const b = document.getElementById('btnCreateProd');
+            if (b) b.textContent = '💾 Update Product';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load products</p>';
+      }
+    }
+
+    document.getElementById('btnCreateProd')?.addEventListener('click', async () => {
+      const name = (document.getElementById('prodName')?.value || '').trim();
+      const shortDescription = document.getElementById('prodShort')?.value || '';
+      const fullDescription = document.getElementById('prodFull')?.value || '';
+      const price = document.getElementById('prodPrice')?.value;
+      const categoryId = document.getElementById('prodCatId')?.value || '';
+      const imgInput = document.getElementById('prodImage');
+      const descImgInput = document.getElementById('prodDescImage');
+      const msg = document.getElementById('prodMsg');
+      const loading = document.getElementById('prodLoading');
+      const btn = document.getElementById('btnCreateProd');
+      const pageId = document.getElementById('prodPageId')?.value || '';
+      const connectorId = document.getElementById('prodConnectorId')?.value || '';
+      if (!name) { alert('Product name required'); return; }
+      if (!pageId) { alert('Select a page first'); return; }
+      if (!categoryId) { alert('Select a category on that page'); return; }
+      if (price === '' || isNaN(parseFloat(price))) { alert('Valid price required'); return; }
+      const commands = [];
+      document.querySelectorAll('#cmdList input').forEach(inp => {
+        const v = (inp.value || '').trim();
+        if (v) commands.push(v);
+      });
+      const fd = new FormData();
+      fd.append('name', name);
+      fd.append('shortDescription', shortDescription);
+      fd.append('fullDescription', fullDescription);
+      fd.append('price', price);
+      fd.append('categoryId', categoryId);
+      fd.append('connectorId', connectorId);
+      fd.append('commands', JSON.stringify(commands));
+      if (imgInput && imgInput.files && imgInput.files[0]) fd.append('image', imgInput.files[0]);
+      if (descImgInput && descImgInput.files && descImgInput.files[0]) fd.append('descriptionImage', descImgInput.files[0]);
+      if (loading) loading.style.display = 'flex';
+      if (btn) btn.disabled = true;
+      try {
+        const isEdit = !!editingProdId;
+        const url = isEdit ? ('/api/admin/products/' + editingProdId) : '/api/admin/products';
+        const res = await fetch(url, { method: isEdit ? 'PUT' : 'POST', credentials: 'include', body: fd });
+        const data = await res.json();
+        msg.style.display = 'block';
+        if (data.success) {
+          msg.className = 'msg ok';
+          msg.textContent = isEdit ? ('Updated: ' + name) : ('Product created: ' + data.product.name);
+          document.getElementById('prodName').value = '';
+          document.getElementById('prodShort').value = '';
+          document.getElementById('prodFull').value = '';
+          document.getElementById('prodPrice').value = '';
+          if (imgInput) imgInput.value = '';
+          if (descImgInput) descImgInput.value = '';
+          if (typeof initCmdList === 'function') initCmdList();
+          editingProdId = null;
+          if (btn) btn.textContent = '+ Create Product';
+          loadProducts();
+        } else {
+          msg.className = 'msg err';
+          msg.textContent = data.message || 'Failed';
+        }
+      } catch {
+        msg.style.display = 'block';
+        msg.className = 'msg err';
+        msg.textContent = 'Failed';
+      }
+      if (loading) loading.style.display = 'none';
+      if (btn) btn.disabled = false;
+    });
+
+    
+    // ---------- Coupons ----------
+    document.getElementById('cpScope')?.addEventListener('change', () => {
+      const w = document.getElementById('cpProductsWrap');
+      if (w) w.style.display = document.getElementById('cpScope').value === 'products' ? 'block' : 'none';
+    });
+
+    async function loadCouponProductChecks() {
+      const box = document.getElementById('cpProductChecks');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/products', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success || !data.products.length) {
+          box.innerHTML = '<span style="color:var(--muted);">No products yet</span>';
+          return;
+        }
+        box.innerHTML = data.products.map(pr =>
+          '<label style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;cursor:pointer;font-size:0.9rem;">' +
+          '<input type="checkbox" class="cp-prod" value="' + pr.id + '" /> ' + escapeHtml(pr.name) + ' (₹' + Number(pr.price).toFixed(2) + ')</label>'
+        ).join('');
+      } catch {
+        box.innerHTML = 'Failed to load products';
+      }
+    }
+
+    async function loadReferralSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        const s = data.settings || {};
+        const en = document.getElementById('referralEnabled');
+        if (en) en.checked = s.referralEnabled !== false;
+        const pct = document.getElementById('referralDiscountPercent');
+        if (pct) pct.value = s.referralDiscountPercent != null ? s.referralDiscountPercent : 5;
+        const min = document.getElementById('referralMinOrder');
+        if (min) min.value = s.referralMinOrder != null ? s.referralMinOrder : 0;
+      } catch {}
+    }
+
+    document.getElementById('btnSaveReferral')?.addEventListener('click', async () => {
+      const msg = document.getElementById('refMsg');
+      const fd = new FormData();
+      fd.append('referralEnabled', document.getElementById('referralEnabled').checked ? 'true' : 'false');
+      fd.append('referralDiscountPercent', document.getElementById('referralDiscountPercent').value);
+      fd.append('referralMinOrder', document.getElementById('referralMinOrder').value);
+      // need other required-ish fields - send current site fields if present
+      ['siteName','serverIP','serverPort','discordLink','upiId'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) fd.append(id, el.value || '');
+      });
+      try {
+        const res = await fetch('/api/admin/settings', { method: 'PUT', credentials: 'include', body: fd });
+        const data = await res.json();
+        if (msg) {
+          msg.style.display = 'block';
+          msg.className = data.success ? 'msg ok' : 'msg err';
+          msg.textContent = data.success ? 'Referral settings saved' : (data.message || 'Failed');
+        }
+      } catch {
+        if (msg) { msg.style.display = 'block'; msg.className = 'msg err'; msg.textContent = 'Failed'; }
+      }
+    });
+
+    async function loadCoupons() {
+      const box = document.getElementById('couponsList');
+      if (!box) return;
+      await loadCouponProductChecks();
+      await loadReferralSettings();
+      try {
+        const res = await fetch('/api/admin/coupons', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.coupons.length) {
+          box.innerHTML = '<p style="color:var(--muted);">No coupons yet.</p>';
+          return;
+        }
+        box.innerHTML = data.coupons.map(c => {
+          const en = c.enabled !== false;
+          const val = c.type === 'percent' ? (c.value + '%') : ('₹' + c.value);
+          const scope = c.scope === 'products' ? ((c.productIds||[]).length + ' products') : 'All products';
+          const uses = (c.usedCount || 0) + (c.maxUses != null ? (' / ' + c.maxUses) : '');
+          return '<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.6rem;display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:center;opacity:' + (en?'1':'0.55') + ';">' +
+            '<div><div style="font-weight:800;letter-spacing:0.04em;">' + escapeHtml(c.code) + (en?'':' <span style="color:#f59e0b;font-size:0.75rem;">(Disabled)</span>') + '</div>' +
+            '<div style="font-size:0.85rem;color:var(--muted);margin-top:0.25rem;">' + val + ' off · ' + scope + ' · Used ' + uses + (c.expiresAt ? ' · Exp ' + escapeHtml(String(c.expiresAt).slice(0,10)) : '') + '</div></div>' +
+            '<div style="display:flex;gap:0.4rem;">' +
+            '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-cp-toggle="' + c.id + '" data-enabled="' + (en?'1':'0') + '">' + (en?'Disable':'Enable') + '</button>' +
+            '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;color:#f87171;" data-cp-del="' + c.id + '">Delete</button>' +
+            '</div></div>';
+        }).join('');
+        box.querySelectorAll('[data-cp-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete coupon?')) return;
+            await fetch('/api/admin/coupons/' + btn.dataset.cpDel, { method: 'DELETE', credentials: 'include' });
+            loadCoupons();
+          };
+        });
+        box.querySelectorAll('[data-cp-toggle]').forEach(btn => {
+          btn.onclick = async () => {
+            const next = btn.dataset.enabled !== '1';
+            await fetch('/api/admin/coupons/' + btn.dataset.cpToggle, {
+              method: 'PUT', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ enabled: next })
+            });
+            loadCoupons();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load</p>';
+      }
+    }
+
+    document.getElementById('btnCreateCoupon')?.addEventListener('click', async () => {
+      const msg = document.getElementById('cpMsg');
+      const code = (document.getElementById('cpCode')?.value || '').trim();
+      const type = document.getElementById('cpType')?.value || 'percent';
+      const value = document.getElementById('cpValue')?.value;
+      const scope = document.getElementById('cpScope')?.value || 'all';
+      const productIds = [...document.querySelectorAll('.cp-prod:checked')].map(x => x.value);
+      const body = {
+        code, type, value: parseFloat(value),
+        scope, productIds,
+        minOrder: parseFloat(document.getElementById('cpMinOrder')?.value) || 0,
+        maxUses: document.getElementById('cpMaxUses')?.value || null,
+        expiresAt: document.getElementById('cpExpires')?.value || null,
+        note: document.getElementById('cpNote')?.value || ''
+      };
+      try {
+        const res = await fetch('/api/admin/coupons', {
+          method: 'POST', credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (msg) {
+          msg.style.display = 'block';
+          msg.className = data.success ? 'msg ok' : 'msg err';
+          msg.textContent = data.success ? ('Created: ' + data.coupon.code) : (data.message || 'Failed');
+        }
+        if (data.success) {
+          document.getElementById('cpCode').value = '';
+          document.getElementById('cpValue').value = '';
+          loadCoupons();
+        }
+      } catch {
+        if (msg) { msg.style.display = 'block'; msg.className = 'msg err'; msg.textContent = 'Failed'; }
+      }
+    });
+
+
+    async function loadPayments() {
+      const box = document.getElementById('paymentsList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/admin/payments', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.success) return;
+        if (!data.payments.length) {
+          box.innerHTML = '<p style="color:var(--muted);">No payment requests yet.</p>';
+          return;
+        }
+        const statusColor = { pending: '#fbbf24', approved: '#22d3ee', rejected: '#f87171' };
+        box.innerHTML = data.payments.map(pay => {
+          const items = (pay.items || []).map(i => escapeHtml(i.name) + ' x' + (i.qty||1)).join(', ');
+          const st = pay.status || 'pending';
+          return '<div style="border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem;">' +
+            '<div style="display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:space-between;align-items:flex-start;">' +
+            '<div style="min-width:0;flex:1;">' +
+            '<div style="font-weight:700;">' + escapeHtml(pay.mcUsername || '') + ' <span style="color:' + (statusColor[st]||'#94a3b8') + ';font-size:0.8rem;text-transform:uppercase;">' + escapeHtml(st) + '</span></div>' +
+            '<div style="font-size:0.85rem;color:var(--muted);margin-top:0.25rem;">' + items + '</div>' +
+            '<div style="font-size:0.85rem;margin-top:0.35rem;">Total: <strong style="color:var(--accent);">₹' + Number(pay.total).toFixed(2) + '</strong> · Paid from UPI: ' + escapeHtml(pay.payerUpi || '') + '</div>' +
+            '<div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">' + escapeHtml(pay.createdAt || '') + '</div>' +
+            '</div>' +
+            (pay.proof ? '<a href="' + escapeHtml(pay.proof) + '" target="_blank"><img src="' + escapeHtml(pay.proof) + '" alt="proof" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid var(--border);"/></a>' : '') +
+            '</div>' +
+            '<div style="display:flex;gap:0.4rem;margin-top:0.75rem;flex-wrap:wrap;">' +
+            (st === 'pending' ? '<button type="button" class="btn" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-pay-approve="' + pay.id + '">Approve</button>' +
+            '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;" data-pay-reject="' + pay.id + '">Disapprove</button>' : '') +
+            '<button type="button" class="btn btn-outline" style="padding:0.35rem 0.7rem;font-size:0.8rem;color:#f87171;border-color:rgba(248,113,113,0.4);" data-pay-del="' + pay.id + '">Delete</button>' +
+            '</div></div>';
+        }).join('');
+        box.querySelectorAll('[data-pay-approve]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Approve and run commands?')) return;
+            btn.disabled = true;
+            await fetch('/api/admin/payments/' + btn.dataset.payApprove + '/approve', { method: 'POST', credentials: 'include' });
+            loadPayments();
+          };
+        });
+        box.querySelectorAll('[data-pay-reject]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Reject this payment?')) return;
+            await fetch('/api/admin/payments/' + btn.dataset.payReject + '/reject', { method: 'POST', credentials: 'include' });
+            loadPayments();
+          };
+        });
+        box.querySelectorAll('[data-pay-del]').forEach(btn => {
+          btn.onclick = async () => {
+            if (!confirm('Delete this payment record?')) return;
+            await fetch('/api/admin/payments/' + btn.dataset.payDel, { method: 'DELETE', credentials: 'include' });
+            loadPayments();
+          };
+        });
+      } catch {
+        box.innerHTML = '<p style="color:#f87171;">Failed to load payments</p>';
+      }
+    }
+
+document.querySelectorAll('.sidebar nav a').forEach(a => {
+      a.addEventListener('click', () => {
+        if (a.dataset.section === 'products') loadProducts();
+        if (a.dataset.section === 'coupons') loadCoupons();
+        if (a.dataset.section === 'payments') loadPayments();
+        if (a.dataset.section === 'categories') loadCategories();
+      });
+    });
+
+    document.getElementById('btnDownloadPlugin')?.addEventListener('click', () => {
+      window.location.href = '/api/admin/plugin-download';
+    });
+
+  </script>
+</body>
+</html>
